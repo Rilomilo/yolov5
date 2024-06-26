@@ -43,7 +43,6 @@ except (ImportError, AssertionError):
     os.system("pip install -U ultralytics")
     import ultralytics
 
-from ultralytics.utils.checks import check_requirements
 
 from utils import TryExcept, emojis
 from utils.downloads import curl_download, gsutil_getsize
@@ -336,23 +335,6 @@ def file_size(path):
         return 0.0
 
 
-def check_online():
-    """Checks internet connectivity by attempting to create a connection to "1.1.1.1" on port 443, retries once if the
-    first attempt fails.
-    """
-    import socket
-
-    def run_once():
-        # Check once
-        try:
-            socket.create_connection(("1.1.1.1", 443), 5)  # check host accessibility
-            return True
-        except OSError:
-            return False
-
-    return run_once() or run_once()  # check twice to increase robustness to intermittent connectivity issues
-
-
 def git_describe(path=ROOT):
     """
     Returns a human-readable git description of the repository at `path`, or an empty string on failure.
@@ -364,60 +346,6 @@ def git_describe(path=ROOT):
         return check_output(f"git -C {path} describe --tags --long --always", shell=True).decode()[:-1]
     except Exception:
         return ""
-
-
-@TryExcept()
-@WorkingDirectory(ROOT)
-def check_git_status(repo="ultralytics/yolov5", branch="master"):
-    """Checks if YOLOv5 code is up-to-date with the repository, advising 'git pull' if behind; errors return informative
-    messages.
-    """
-    url = f"https://github.com/{repo}"
-    msg = f", for updates see {url}"
-    s = colorstr("github: ")  # string
-    assert Path(".git").exists(), s + "skipping check (not a git repository)" + msg
-    assert check_online(), s + "skipping check (offline)" + msg
-
-    splits = re.split(pattern=r"\s", string=check_output("git remote -v", shell=True).decode())
-    matches = [repo in s for s in splits]
-    if any(matches):
-        remote = splits[matches.index(True) - 1]
-    else:
-        remote = "ultralytics"
-        check_output(f"git remote add {remote} {url}", shell=True)
-    check_output(f"git fetch {remote}", shell=True, timeout=5)  # git fetch
-    local_branch = check_output("git rev-parse --abbrev-ref HEAD", shell=True).decode().strip()  # checked out
-    n = int(check_output(f"git rev-list {local_branch}..{remote}/{branch} --count", shell=True))  # commits behind
-    if n > 0:
-        pull = "git pull" if remote == "origin" else f"git pull {remote} {branch}"
-        s += f"⚠️ YOLOv5 is out of date by {n} commit{'s' * (n > 1)}. Use '{pull}' or 'git clone {url}' to update."
-    else:
-        s += f"up to date with {url} ✅"
-    LOGGER.info(s)
-
-
-@WorkingDirectory(ROOT)
-def check_git_info(path="."):
-    """Checks YOLOv5 git info, returning a dict with remote URL, branch name, and commit hash."""
-    check_requirements("gitpython")
-    import git
-
-    try:
-        repo = git.Repo(path)
-        remote = repo.remotes.origin.url.replace(".git", "")  # i.e. 'https://github.com/ultralytics/yolov5'
-        commit = repo.head.commit.hexsha  # i.e. '3134699c73af83aac2a481435550b968d5792c0d'
-        try:
-            branch = repo.active_branch.name  # i.e. 'main'
-        except TypeError:  # not on any branch
-            branch = None  # i.e. 'detached HEAD' state
-        return {"remote": remote, "branch": branch, "commit": commit}
-    except git.exc.InvalidGitRepositoryError:  # path is not a git dir
-        return {"remote": None, "branch": None, "commit": None}
-
-
-def check_python(minimum="3.8.0"):
-    """Checks if current Python version meets the minimum required version, exits if not."""
-    check_version(platform.python_version(), minimum, name="Python ", hard=True)
 
 
 def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=False, hard=False, verbose=False):
