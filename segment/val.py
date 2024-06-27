@@ -48,7 +48,6 @@ from utils.general import (
     Profile,
     check_dataset,
     check_img_size,
-    check_requirements,
     check_yaml,
     coco80_to_coco91_class,
     colorstr,
@@ -182,7 +181,6 @@ def run(
     callbacks=Callbacks(),
 ):
     if save_json:
-        check_requirements("pycocotools>=2.0.6")
         process = process_mask_native  # more accurate
     else:
         process = process_mask  # faster
@@ -477,7 +475,6 @@ def parse_opt():
 
 def main(opt):
     """Executes YOLOv5 tasks including training, validation, testing, speed, and study with configurable options."""
-    check_requirements(ROOT / "requirements.txt", exclude=("tensorboard", "thop"))
 
     if opt.task in ("train", "val", "test"):  # run normally
         if opt.conf_thres > 0.001:  # https://github.com/ultralytics/yolov5/issues/1466

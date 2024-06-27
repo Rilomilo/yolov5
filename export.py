@@ -73,7 +73,6 @@ from utils.general import (
     Profile,
     check_dataset,
     check_img_size,
-    check_requirements,
     check_version,
     check_yaml,
     colorstr,
@@ -166,7 +165,6 @@ def export_torchscript(model, im, file, optimize, prefix=colorstr("TorchScript:"
 @try_export
 def export_onnx(model, im, file, opset, dynamic, simplify, prefix=colorstr("ONNX:")):
     """Exports a YOLOv5 model to ONNX format with dynamic axes and optional simplification."""
-    check_requirements("onnx>=1.12.0")
     import onnx
 
     LOGGER.info(f"\n{prefix} starting export with onnx {onnx.__version__}...")
@@ -208,7 +206,6 @@ def export_onnx(model, im, file, opset, dynamic, simplify, prefix=colorstr("ONNX
     if simplify:
         try:
             cuda = torch.cuda.is_available()
-            check_requirements(("onnxruntime-gpu" if cuda else "onnxruntime", "onnx-simplifier>=0.4.1"))
             import onnxsim
 
             LOGGER.info(f"{prefix} simplifying with onnx-simplifier {onnxsim.__version__}...")
@@ -223,7 +220,6 @@ def export_onnx(model, im, file, opset, dynamic, simplify, prefix=colorstr("ONNX
 @try_export
 def export_openvino(file, metadata, half, int8, data, prefix=colorstr("OpenVINO:")):
     # YOLOv5 OpenVINO export
-    check_requirements("openvino-dev>=2023.0")  # requires openvino-dev: https://pypi.org/project/openvino-dev/
     import openvino.runtime as ov  # noqa
     from openvino.tools import mo  # noqa
 
@@ -235,7 +231,6 @@ def export_openvino(file, metadata, half, int8, data, prefix=colorstr("OpenVINO:
     ov_model = mo.convert_model(f_onnx, model_name=file.stem, framework="onnx", compress_to_fp16=half)  # export
 
     if int8:
-        check_requirements("nncf>=2.5.0")  # requires at least version 2.5.0 to use the post-training quantization
         import nncf
         import numpy as np
 
@@ -281,7 +276,6 @@ def export_paddle(model, im, file, metadata, prefix=colorstr("PaddlePaddle:")):
     """Exports a YOLOv5 model to PaddlePaddle format using X2Paddle, saving to `save_dir` and adding a metadata.yaml
     file.
     """
-    check_requirements(("paddlepaddle", "x2paddle"))
     import x2paddle
     from x2paddle.convert import pytorch2paddle
 
@@ -296,7 +290,6 @@ def export_paddle(model, im, file, metadata, prefix=colorstr("PaddlePaddle:")):
 @try_export
 def export_coreml(model, im, file, int8, half, nms, prefix=colorstr("CoreML:")):
     """Exports YOLOv5 model to CoreML format with optional NMS, INT8, and FP16 support; requires coremltools."""
-    check_requirements("coremltools")
     import coremltools as ct
 
     LOGGER.info(f"\n{prefix} starting export with coremltools {ct.__version__}...")
@@ -326,12 +319,7 @@ def export_engine(model, im, file, half, dynamic, simplify, workspace=4, verbose
     https://developer.nvidia.com/tensorrt
     """
     assert im.device.type != "cpu", "export running on CPU but must be on GPU, i.e. `python export.py --device 0`"
-    try:
-        import tensorrt as trt
-    except Exception:
-        if platform.system() == "Linux":
-            check_requirements("nvidia-tensorrt", cmds="-U --index-url https://pypi.ngc.nvidia.com")
-        import tensorrt as trt
+    import tensorrt as trt
 
     if trt.__version__[0] == "7":  # TensorRT 7 handling https://github.com/ultralytics/yolov5/issues/6012
         grid = model.model[-1].anchor_grid
@@ -404,12 +392,7 @@ def export_saved_model(
     prefix=colorstr("TensorFlow SavedModel:"),
 ):
     # YOLOv5 TensorFlow SavedModel export
-    try:
-        import tensorflow as tf
-    except Exception:
-        check_requirements(f"tensorflow{'' if torch.cuda.is_available() else '-macos' if MACOS else '-cpu'}<=2.15.1")
-
-        import tensorflow as tf
+    import tensorflow as tf
     from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
     from models.tf import TFModel
@@ -549,7 +532,6 @@ def export_edgetpu(file, prefix=colorstr("Edge TPU:")):
 @try_export
 def export_tfjs(file, int8, prefix=colorstr("TensorFlow.js:")):
     """Exports a YOLOv5 model to TensorFlow.js format, optionally with uint8 quantization."""
-    check_requirements("tensorflowjs")
     import tensorflowjs as tfjs
 
     LOGGER.info(f"\n{prefix} starting export with tensorflowjs {tfjs.__version__}...")
@@ -591,7 +573,6 @@ def add_tflite_metadata(file, metadata, num_outputs):
     https://www.tensorflow.org/lite/models/convert/metadata
     """
     with contextlib.suppress(ImportError):
-        # check_requirements('tflite_support')
         from tflite_support import flatbuffers
         from tflite_support import metadata as _metadata
         from tflite_support import metadata_schema_py_generated as _metadata_fb

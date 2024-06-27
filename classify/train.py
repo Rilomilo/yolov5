@@ -43,9 +43,6 @@ from utils.general import (
     LOGGER,
     TQDM_BAR_FORMAT,
     WorkingDirectory,
-    check_git_info,
-    check_git_status,
-    check_requirements,
     colorstr,
     download,
     increment_path,
@@ -70,7 +67,6 @@ from utils.torch_utils import (
 LOCAL_RANK = int(os.getenv("LOCAL_RANK", -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv("RANK", -1))
 WORLD_SIZE = int(os.getenv("WORLD_SIZE", 1))
-GIT_INFO = check_git_info()
 
 
 def train(opt, device):
@@ -274,7 +270,7 @@ def train(opt, device):
                     "updates": ema.updates,
                     "optimizer": None,  # optimizer.state_dict(),
                     "opt": vars(opt),
-                    "git": GIT_INFO,  # {remote, branch, commit} if a git repo
+                    "git": "",  # {remote, branch, commit} if a git repo
                     "date": datetime.now().isoformat(),
                 }
 
@@ -341,8 +337,6 @@ def main(opt):
     """Executes YOLOv5 training with given options, handling device setup and DDP mode; includes pre-training checks."""
     if RANK in {-1, 0}:
         print_args(vars(opt))
-        check_git_status()
-        check_requirements(ROOT / "requirements.txt")
 
     # DDP mode
     device = select_device(opt.device, batch_size=opt.batch_size)

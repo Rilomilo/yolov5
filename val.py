@@ -43,7 +43,6 @@ from utils.general import (
     Profile,
     check_dataset,
     check_img_size,
-    check_requirements,
     check_yaml,
     coco80_to_coco91_class,
     colorstr,
@@ -333,7 +332,6 @@ def run(
             json.dump(jdict, f)
 
         try:  # https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocoEvalDemo.ipynb
-            check_requirements("pycocotools>=2.0.6")
             from pycocotools.coco import COCO
             from pycocotools.cocoeval import COCOeval
 
@@ -397,7 +395,6 @@ def main(opt):
     """Executes YOLOv5 tasks like training, validation, testing, speed, and study benchmarks based on provided
     options.
     """
-    check_requirements(ROOT / "requirements.txt", exclude=("tensorboard", "thop"))
 
     if opt.task in ("train", "val", "test"):  # run normally
         if opt.conf_thres > 0.001:  # https://github.com/ultralytics/yolov5/issues/1466

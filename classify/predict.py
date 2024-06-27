@@ -52,7 +52,6 @@ from utils.general import (
     check_file,
     check_img_size,
     check_imshow,
-    check_requirements,
     colorstr,
     cv2,
     increment_path,
@@ -229,7 +228,6 @@ def parse_opt():
 
 def main(opt):
     """Executes YOLOv5 model inference with options for ONNX DNN and video frame-rate stride adjustments."""
-    check_requirements(ROOT / "requirements.txt", exclude=("tensorboard", "thop"))
     run(**vars(opt))
 
 

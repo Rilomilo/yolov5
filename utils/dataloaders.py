@@ -42,7 +42,6 @@ from utils.general import (
     NUM_THREADS,
     TQDM_BAR_FORMAT,
     check_dataset,
-    check_requirements,
     check_yaml,
     clean_str,
     cv2,
@@ -266,7 +265,6 @@ class LoadScreenshots:
 
         Source = [screen_number left top width height] (pixels)
         """
-        check_requirements("mss")
         import mss
 
         source, *params = source.split()
@@ -446,7 +444,6 @@ class LoadStreams:
             st = f"{i + 1}/{n}: {s}... "
             if urlparse(s).hostname in ("www.youtube.com", "youtube.com", "youtu.be"):  # if source is YouTube video
                 # YouTube format i.e. 'https://www.youtube.com/watch?v=Zgi9g1ksQHc' or 'https://youtu.be/LNwODJXcvt4'
-                check_requirements(("pafy", "youtube_dl==2020.12.2"))
                 import pafy
 
                 s = pafy.new(s).getbest(preftype="mp4").url  # YouTube URL
